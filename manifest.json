@@ -1,0 +1,18 @@
+{
+  "Group": "GilloDaby",
+  "Name": "Better HUD",
+  "Version": "1.2.1",
+  "Description": "Affiche les icones d'armure et leur durabilite au-dessus de la hotbar.",
+  "Authors": [
+    { "Name": "GilloDaby" }
+  ],
+  "Website": "",
+  "ServerVersion": "*",
+  "Dependencies": {
+    "Buuz135:MultipleHUD": "*"
+  },
+  "OptionalDependencies": {},
+  "DisabledByDefault": false,
+  "Main": "com.gillodaby.betterhud.BetterHudPlugin",
+  "IncludesAssetPack": true
+}

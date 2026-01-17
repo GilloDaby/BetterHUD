@@ -1,0 +1,4 @@
+# Configuration placeholder for BetterHUD
+settings:
+  refreshSeconds: 2
+  showEmptySlots: true

@@ -1,0 +1,11 @@
+{
+  "id": "betterhud",
+  "name": "Better HUD",
+  "version": "1.2.1",
+  "author": "GilloDaby",
+  "description": "Affiche l'état de l'équipement directement au-dessus de la hotbar.",
+  "main": "com.gillodaby.betterhud.BetterHudPlugin",
+  "dependencies": [
+    "Buuz135:MultipleHUD"
+  ]
+}
