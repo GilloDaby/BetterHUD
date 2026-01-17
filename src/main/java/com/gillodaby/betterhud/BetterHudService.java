@@ -7,6 +7,7 @@ import com.hypixel.hytale.server.core.event.events.player.PlayerDisconnectEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.inventory.container.ItemContainer;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.entity.entities.player.hud.CustomUIHud;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +23,7 @@ final class BetterHudService {
 
     private final Map<UUID, TrackedHud> huds = new ConcurrentHashMap<>();
     private final ScheduledExecutorService refresher;
+    private static final long REFRESH_INTERVAL_MS = 500;
 
     BetterHudService() {
         ThreadFactory factory = runnable -> {
@@ -33,7 +35,7 @@ final class BetterHudService {
     }
 
     void start() {
-       refresher.scheduleAtFixedRate(this::refreshAll, 500, 500, TimeUnit.MILLISECONDS);
+        refresher.scheduleAtFixedRate(this::refreshAll, REFRESH_INTERVAL_MS, REFRESH_INTERVAL_MS, TimeUnit.MILLISECONDS);
     }
 
     void handlePlayerReady(PlayerReadyEvent event) {
@@ -60,6 +62,7 @@ final class BetterHudService {
                 BetterHudHud hud = new BetterHudHud(playerRef);
                 refreshHud(hud, player, armor);
                 MultipleHUD.getInstance().setCustomHud(player, playerRef, "BetterHUD", hud);
+                ensureThreadSafeMultipleHud(player);
                 List<EventRegistration> listeners = new ArrayList<>();
                 listeners.add(registerListener(armor, hud, player, armor));
                 listeners.add(registerListener(hotbar, hud, player, armor));
@@ -116,6 +119,44 @@ final class BetterHudService {
             return null;
         }
         return container.registerChangeEvent(ev -> refreshHud(hud, player, armor));
+    }
+
+    /**
+     * MultipleHUD stores its HUDs inside a plain HashMap; swapping it to a ConcurrentHashMap
+     * avoids concurrent modification when other plugins rebuild HUDs on tick threads.
+     */
+    private void ensureThreadSafeMultipleHud(Player player) {
+        if (player == null) {
+            return;
+        }
+        try {
+            var hudManager = player.getHudManager();
+            if (hudManager == null) return;
+            CustomUIHud current = hudManager.getCustomHud();
+
+            Class<?> multiClass = Class.forName("com.buuz135.mhud.MultipleCustomUIHud");
+            if (!multiClass.isInstance(current)) {
+                return;
+            }
+
+            var field = multiClass.getDeclaredField("customHuds");
+            field.setAccessible(true);
+            Object existing = field.get(current);
+            if (existing instanceof java.util.concurrent.ConcurrentHashMap) {
+                return;
+            }
+            Map<String, CustomUIHud> safe = new java.util.concurrent.ConcurrentHashMap<>();
+            if (existing instanceof Map<?, ?> map) {
+                for (Map.Entry<?, ?> entry : map.entrySet()) {
+                    if (entry.getKey() instanceof String key && entry.getValue() instanceof CustomUIHud value) {
+                        safe.put(key, value);
+                    }
+                }
+            }
+            field.set(current, safe);
+        } catch (Throwable ignored) {
+            // If reflection fails, fall back to default behavior.
+        }
     }
 
     private static final class TrackedHud {

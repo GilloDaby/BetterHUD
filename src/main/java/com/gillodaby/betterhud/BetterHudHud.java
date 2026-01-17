@@ -21,6 +21,9 @@ final class BetterHudHud extends CustomUIHud {
     private static final DecimalFormat COUNT = new DecimalFormat("###,###");
     private static final String[] SLOT_IDS = {"Head", "Chest", "Legs", "Feet"};
     private static final String ARROW_TOKEN = "weapon_arrow";
+    private Player cachedPlayer;
+    private ItemContainer cachedArmor;
+    private ItemContainer cachedAllItems;
 
     BetterHudHud(PlayerRef ref) {
         super(ref);
@@ -28,10 +31,13 @@ final class BetterHudHud extends CustomUIHud {
 
     @Override
     protected void build(UICommandBuilder builder) {
-        writeHud(builder, null, null, null);
+        writeHud(builder, cachedArmor, cachedPlayer, cachedAllItems);
     }
 
     void refresh(Player player, ItemContainer armor, ItemContainer allItems) {
+        this.cachedPlayer = player;
+        this.cachedArmor = armor;
+        this.cachedAllItems = allItems;
         UICommandBuilder builder = new UICommandBuilder();
         writeHud(builder, armor, player, allItems);
         // partial update is enough now that layout is static
