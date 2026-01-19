@@ -1,7 +1,7 @@
 {
   "Group": "GilloDaby",
   "Name": "Better HUD",
-  "Version": "1.3.0",
+  "Version": "1.3.5",
   "Description": "Affiche les icones d'armure et leur durabilite au-dessus de la hotbar.",
   "Authors": [
     { "Name": "GilloDaby" }

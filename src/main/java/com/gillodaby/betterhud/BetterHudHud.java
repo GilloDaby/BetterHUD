@@ -60,14 +60,14 @@ final class BetterHudHud extends CustomUIHud {
             String iconSelector = "#" + id + "Icon.ItemId";
 
             if (i >= capacity) {
-                builder.set(valueSelector, "-");
+                builder.set(valueSelector, "");
                 builder.setNull(iconSelector);
                 continue;
             }
 
             ItemStack stack = armor.getItemStack((short) i);
             if (stack == null || stack.isEmpty()) {
-                builder.set(valueSelector, "-");
+                builder.set(valueSelector, "");
                 builder.setNull(iconSelector);
                 continue;
             }
@@ -138,7 +138,7 @@ final class BetterHudHud extends CustomUIHud {
 
     private void hideMainHand(UICommandBuilder builder) {
         builder.set("#MainHand.Visible", false);
-        builder.set("#MainValue.Text", "-");
+        builder.set("#MainValue.Text", "");
         builder.setNull("#MainIcon.ItemId");
     }
 

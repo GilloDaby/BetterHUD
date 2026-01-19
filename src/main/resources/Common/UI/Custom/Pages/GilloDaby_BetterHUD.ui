@@ -1,77 +1,77 @@
 Group #HudRoot {
-  Anchor: (Width: 1020, Height: 84, Bottom: 140);
+  Anchor: (Width: 900, Height: 72, Bottom: 140);
   LayoutMode: Left;
-  Padding: (Left: 4, Right: 4, Top: 4, Bottom: 4);
+  Padding: (Left: 2, Right: 2, Top: 2, Bottom: 2);
 
   // Head
   Group #Head {
-    Anchor: (Width: 160, Height: 84);
+    Anchor: (Width: 144, Height: 72);
     LayoutMode: Top;
     Group #HeadIconContainer {
-      Anchor: (Width: 160, Height: 46);
+      Anchor: (Width: 144, Height: 42);
       LayoutMode: CenterMiddle;
-      ItemIcon #HeadIcon { Anchor: (Width: 44, Height: 44); }
+      ItemIcon #HeadIcon { Anchor: (Width: 40, Height: 40); }
     }
-    Label #HeadValue { @Text = "-"; Anchor: (Width: 160); Style: (HorizontalAlignment: Center); }
+    Label #HeadValue { @Text = ""; Anchor: (Width: 144); Style: (HorizontalAlignment: Center); }
   }
 
   // Chest
   Group #Chest {
-    Anchor: (Width: 160, Height: 84);
+    Anchor: (Width: 144, Height: 72);
     LayoutMode: Top;
     Group #ChestIconContainer {
-      Anchor: (Width: 160, Height: 46);
+      Anchor: (Width: 144, Height: 42);
       LayoutMode: CenterMiddle;
-      ItemIcon #ChestIcon { Anchor: (Width: 44, Height: 44); }
+      ItemIcon #ChestIcon { Anchor: (Width: 40, Height: 40); }
     }
-    Label #ChestValue { @Text = "-"; Anchor: (Width: 160); Style: (HorizontalAlignment: Center); }
+    Label #ChestValue { @Text = ""; Anchor: (Width: 144); Style: (HorizontalAlignment: Center); }
   }
 
   // Legs
   Group #Legs {
-    Anchor: (Width: 160, Height: 84);
+    Anchor: (Width: 144, Height: 72);
     LayoutMode: Top;
     Group #LegsIconContainer {
-      Anchor: (Width: 160, Height: 46);
+      Anchor: (Width: 144, Height: 42);
       LayoutMode: CenterMiddle;
-      ItemIcon #LegsIcon { Anchor: (Width: 44, Height: 44); }
+      ItemIcon #LegsIcon { Anchor: (Width: 40, Height: 40); }
     }
-    Label #LegsValue { @Text = "-"; Anchor: (Width: 160); Style: (HorizontalAlignment: Center); }
+    Label #LegsValue { @Text = ""; Anchor: (Width: 144); Style: (HorizontalAlignment: Center); }
   }
 
   // Feet
   Group #Feet {
-    Anchor: (Width: 160, Height: 84);
+    Anchor: (Width: 144, Height: 72);
     LayoutMode: Top;
     Group #FeetIconContainer {
-      Anchor: (Width: 160, Height: 46);
+      Anchor: (Width: 144, Height: 42);
       LayoutMode: CenterMiddle;
-      ItemIcon #FeetIcon { Anchor: (Width: 44, Height: 44); }
+      ItemIcon #FeetIcon { Anchor: (Width: 40, Height: 40); }
     }
-    Label #FeetValue { @Text = "-"; Anchor: (Width: 160); Style: (HorizontalAlignment: Center); }
+    Label #FeetValue { @Text = ""; Anchor: (Width: 144); Style: (HorizontalAlignment: Center); }
   }
 
   // Main-hand tool/weapon
   Group #MainHand {
-    Anchor: (Width: 160, Height: 84);
+    Anchor: (Width: 144, Height: 72);
     LayoutMode: Top;
     Group #MainIconContainer {
-      Anchor: (Width: 160, Height: 46);
+      Anchor: (Width: 144, Height: 42);
       LayoutMode: CenterMiddle;
-      ItemIcon #MainIcon { Anchor: (Width: 48, Height: 48); }
+      ItemIcon #MainIcon { Anchor: (Width: 40, Height: 40); }
     }
-    Label #MainValue { @Text = "-"; Anchor: (Width: 160); Style: (HorizontalAlignment: Center); }
+    Label #MainValue { @Text = ""; Anchor: (Width: 144); Style: (HorizontalAlignment: Center); }
   }
 
   // Total arrows across your inventory
   Group #Arrows {
-    Anchor: (Width: 160, Height: 84);
+    Anchor: (Width: 144, Height: 72);
     LayoutMode: Top;
     Group #ArrowsIconContainer {
-      Anchor: (Width: 160, Height: 46);
+      Anchor: (Width: 144, Height: 42);
       LayoutMode: CenterMiddle;
-      ItemIcon #ArrowsIcon { Anchor: (Width: 44, Height: 44); }
+      ItemIcon #ArrowsIcon { Anchor: (Width: 40, Height: 40); }
     }
-    Label #ArrowsValue { @Text = "0"; Anchor: (Width: 160); Style: (HorizontalAlignment: Center); }
+    Label #ArrowsValue { @Text = "0"; Anchor: (Width: 144); Style: (HorizontalAlignment: Center); }
   }
 }
