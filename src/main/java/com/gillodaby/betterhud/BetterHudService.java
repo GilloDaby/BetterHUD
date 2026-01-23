@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 final class BetterHudService {
 
     private final Map<UUID, TrackedHud> huds = new ConcurrentHashMap<>();
+    private final Map<UUID, TrackedHud> hiddenHuds = new ConcurrentHashMap<>();
     private final ScheduledExecutorService refresher;
     private static final long REFRESH_INTERVAL_MS = 500;
 
@@ -102,6 +103,29 @@ final class BetterHudService {
         TrackedHud tracked = huds.get(player.getPlayerRef().getUuid());
         if (tracked != null) {
             refreshHud(tracked);
+        }
+    }
+
+    void hideHud(Player player) {
+        if (player == null) return;
+        UUID id = player.getPlayerRef().getUuid();
+        TrackedHud tracked = huds.remove(id);
+        if (tracked != null) {
+            hiddenHuds.put(id, tracked);
+            MultipleHUD.getInstance().hideCustomHud(player, player.getPlayerRef(), "BetterHUD");
+            System.out.println("[BetterHUD] HUD hidden for " + player.getDisplayName());
+        }
+    }
+
+    void showHud(Player player) {
+        if (player == null) return;
+        UUID id = player.getPlayerRef().getUuid();
+        TrackedHud tracked = hiddenHuds.remove(id);
+        if (tracked != null) {
+            huds.put(id, tracked);
+            MultipleHUD.getInstance().setCustomHud(player, player.getPlayerRef(), "BetterHUD", tracked.hud);
+            ensureThreadSafeMultipleHud(player);
+            System.out.println("[BetterHUD] HUD shown for " + player.getDisplayName());
         }
     }
 

@@ -1,7 +1,7 @@
 {
   "id": "betterhud",
   "name": "Better HUD",
-  "version": "1.3.6",
+  "version": "1.3.7",
   "author": "GilloDaby",
   "description": "Affiche l'état de l'équipement directement au-dessus de la hotbar.",
   "main": "com.gillodaby.betterhud.BetterHudPlugin",
