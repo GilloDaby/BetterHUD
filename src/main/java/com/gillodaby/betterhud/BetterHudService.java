@@ -125,7 +125,7 @@ final class BetterHudService {
      * MultipleHUD stores its HUDs inside a plain HashMap; swapping it to a ConcurrentHashMap
      * avoids concurrent modification when other plugins rebuild HUDs on tick threads.
      */
-    private void ensureThreadSafeMultipleHud(Player player) {
+    private static void ensureThreadSafeMultipleHud(Player player) {
         if (player == null) {
             return;
         }
@@ -182,6 +182,7 @@ final class BetterHudService {
                 }
             }
             if (player != null) {
+                ensureThreadSafeMultipleHud(player);
                 MultipleHUD.getInstance().hideCustomHud(player, player.getPlayerRef(), "BetterHUD");
             }
         }
