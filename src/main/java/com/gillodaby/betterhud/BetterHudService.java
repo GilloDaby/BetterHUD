@@ -44,6 +44,11 @@ final class BetterHudService {
         PlayerRef playerRef = player.getPlayerRef();
         UUID id = playerRef.getUuid();
 
+        TrackedHud hidden = hiddenHuds.remove(id);
+        if (hidden != null) {
+            hidden.close();
+        }
+
         var inventory = player.getInventory();
         ItemContainer armor = inventory.getArmor();
         ItemContainer hotbar = inventory.getHotbar();
@@ -65,13 +70,14 @@ final class BetterHudService {
                 MultipleHUD.getInstance().setCustomHud(player, playerRef, "BetterHUD", hud);
                 ensureThreadSafeMultipleHud(player);
                 List<EventRegistration> listeners = new ArrayList<>();
-                listeners.add(registerListener(armor, hud, player, armor));
-                listeners.add(registerListener(hotbar, hud, player, armor));
-                listeners.add(registerListener(storage, hud, player, armor));
-                listeners.add(registerListener(backpack, hud, player, armor));
-                listeners.add(registerListener(utility, hud, player, armor));
-                listeners.add(registerListener(tools, hud, player, armor));
-                huds.put(id, new TrackedHud(hud, listeners, armor, player));
+                TrackedHud tracked = new TrackedHud(hud, listeners, armor, player);
+                listeners.add(registerListener(armor, tracked));
+                listeners.add(registerListener(hotbar, tracked));
+                listeners.add(registerListener(storage, tracked));
+                listeners.add(registerListener(backpack, tracked));
+                listeners.add(registerListener(utility, tracked));
+                listeners.add(registerListener(tools, tracked));
+                huds.put(id, tracked);
                 System.out.println("[BetterHUD] HUD overlay shown for " + player.getDisplayName());
             } catch (Throwable t) {
                 System.out.println("[BetterHUD] Failed to show HUD for " + player.getDisplayName() + ": " + t.getMessage());
@@ -86,6 +92,10 @@ final class BetterHudService {
         TrackedHud tracked = huds.remove(id);
         if (tracked != null) {
             tracked.close();
+        }
+        TrackedHud hidden = hiddenHuds.remove(id);
+        if (hidden != null) {
+            hidden.close();
         }
     }
 
@@ -111,6 +121,7 @@ final class BetterHudService {
         UUID id = player.getPlayerRef().getUuid();
         TrackedHud tracked = huds.remove(id);
         if (tracked != null) {
+            tracked.visible = false;
             hiddenHuds.put(id, tracked);
             MultipleHUD.getInstance().hideCustomHud(player, player.getPlayerRef(), "BetterHUD");
             System.out.println("[BetterHUD] HUD hidden for " + player.getDisplayName());
@@ -122,6 +133,7 @@ final class BetterHudService {
         UUID id = player.getPlayerRef().getUuid();
         TrackedHud tracked = hiddenHuds.remove(id);
         if (tracked != null) {
+            tracked.visible = true;
             huds.put(id, tracked);
             MultipleHUD.getInstance().setCustomHud(player, player.getPlayerRef(), "BetterHUD", tracked.hud);
             ensureThreadSafeMultipleHud(player);
@@ -130,19 +142,29 @@ final class BetterHudService {
     }
 
     private void refreshHud(TrackedHud tracked) {
-        refreshHud(tracked.hud, tracked.player, tracked.armor);
+        if (tracked == null || !tracked.visible) {
+            return;
+        }
+        Player player = tracked.player;
+        if (player == null || player.wasRemoved()) {
+            return;
+        }
+        refreshHud(tracked.hud, player, tracked.armor);
     }
 
     private void refreshHud(BetterHudHud hud, Player player, ItemContainer armor) {
+        if (hud == null || player == null || player.wasRemoved()) {
+            return;
+        }
         ItemContainer allItems = player.getInventory().getCombinedEverything();
         hud.refresh(player, armor, allItems);
     }
 
-    private EventRegistration registerListener(ItemContainer container, BetterHudHud hud, Player player, ItemContainer armor) {
+    private EventRegistration registerListener(ItemContainer container, TrackedHud tracked) {
         if (container == null) {
             return null;
         }
-        return container.registerChangeEvent(ev -> refreshHud(hud, player, armor));
+        return container.registerChangeEvent(ev -> refreshHud(tracked));
     }
 
     /**
@@ -188,6 +210,7 @@ final class BetterHudService {
         final List<EventRegistration> listeners;
         final ItemContainer armor;
         final Player player;
+        volatile boolean visible = true;
 
         TrackedHud(BetterHudHud hud, List<EventRegistration> listeners, ItemContainer armor, Player player) {
             this.hud = hud;
