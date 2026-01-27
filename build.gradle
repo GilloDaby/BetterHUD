@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'com.gillodaby'
-version = '1.4.0'
+version = '1.4.5'
 
 // Produce a JAR named after the mod for clarity
 tasks.named('jar') {

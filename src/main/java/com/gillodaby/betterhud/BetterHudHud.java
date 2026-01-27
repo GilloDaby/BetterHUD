@@ -44,12 +44,42 @@ final class BetterHudHud extends CustomUIHud {
         update(false, builder);
     }
 
+    void refreshArmor(Player player, ItemContainer armor) {
+        this.cachedPlayer = player;
+        this.cachedArmor = armor;
+        UICommandBuilder builder = new UICommandBuilder();
+        builder.append("Pages/GilloDaby_BetterHUD.ui");
+        writeArmorSection(builder, armor, player);
+        update(false, builder);
+    }
+
+    void refreshArrows(Player player, ItemContainer allItems) {
+        this.cachedPlayer = player;
+        this.cachedAllItems = allItems;
+        UICommandBuilder builder = new UICommandBuilder();
+        builder.append("Pages/GilloDaby_BetterHUD.ui");
+        writeArrowsSection(builder, allItems);
+        update(false, builder);
+    }
+
+    void refreshMainHand(Player player) {
+        this.cachedPlayer = player;
+        UICommandBuilder builder = new UICommandBuilder();
+        builder.append("Pages/GilloDaby_BetterHUD.ui");
+        writeMainHandSection(builder, player);
+        update(false, builder);
+    }
+
     private void writeHud(UICommandBuilder builder, ItemContainer armor, Player player, ItemContainer allItems) {
         builder.append("Pages/GilloDaby_BetterHUD.ui");
+        writeArmorSection(builder, armor, player);
+        writeArrowsSection(builder, allItems);
+        writeMainHandSection(builder, player);
+    }
 
-        if (armor == null || player == null || allItems == null) {
-            hideMainHand(builder);
-            hideArrows(builder);
+    private void writeArmorSection(UICommandBuilder builder, ItemContainer armor, Player player) {
+        if (armor == null || player == null) {
+            clearArmor(builder);
             return;
         }
 
@@ -82,14 +112,23 @@ final class BetterHudHud extends CustomUIHud {
             builder.set(valueSelector, text);
             builder.set(iconSelector, stack.getItemId());
         }
-
-        writeArrows(builder, allItems);
-        writeMainHand(builder, player);
     }
 
-    private void writeArrows(UICommandBuilder builder, ItemContainer allItems) {
+    private void clearArmor(UICommandBuilder builder) {
+        for (String id : SLOT_IDS) {
+            builder.set("#" + id + "Value.Text", "");
+            builder.setNull("#" + id + "Icon.ItemId");
+        }
+    }
+
+    private void writeArrowsSection(UICommandBuilder builder, ItemContainer allItems) {
         String valueSelector = "#ArrowsValue.Text";
         String iconSelector = "#ArrowsIcon.ItemId";
+
+        if (allItems == null) {
+            hideArrows(builder);
+            return;
+        }
 
         ArrowSummary summary = countArrows(allItems);
         boolean hasArrows = summary.total > 0;
@@ -108,10 +147,15 @@ final class BetterHudHud extends CustomUIHud {
         builder.setNull("#ArrowsIcon.ItemId");
     }
 
-    private void writeMainHand(UICommandBuilder builder, Player player) {
+    private void writeMainHandSection(UICommandBuilder builder, Player player) {
         String visibleSelector = "#MainHand.Visible";
         String valueSelector = "#MainValue.Text";
         String iconSelector = "#MainIcon.ItemId";
+
+        if (player == null) {
+            hideMainHand(builder);
+            return;
+        }
 
         ItemStack stack = player.getInventory().getItemInHand();
         if (stack == null || stack.isEmpty()) {

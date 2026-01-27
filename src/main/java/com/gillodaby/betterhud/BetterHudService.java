@@ -24,7 +24,10 @@ final class BetterHudService {
     private final Map<UUID, TrackedHud> huds = new ConcurrentHashMap<>();
     private final Map<UUID, TrackedHud> hiddenHuds = new ConcurrentHashMap<>();
     private final ScheduledExecutorService refresher;
-    private static final long REFRESH_INTERVAL_MS = 500;
+    private static final long REFRESH_INTERVAL_MS = 1000;
+    private static final long ARMOR_REFRESH_MS = 5000;
+    private static final long ARROWS_REFRESH_MS = 2000;
+    private static final long MAIN_REFRESH_MS = 1000;
 
     BetterHudService() {
         ThreadFactory factory = runnable -> {
@@ -58,7 +61,7 @@ final class BetterHudService {
         ItemContainer tools = inventory.getTools();
         TrackedHud existing = huds.get(id);
         if (existing != null) {
-            refreshHud(existing);
+            refreshHud(existing, System.currentTimeMillis());
             return;
         }
 
@@ -71,12 +74,16 @@ final class BetterHudService {
                 ensureThreadSafeMultipleHud(player);
                 List<EventRegistration> listeners = new ArrayList<>();
                 TrackedHud tracked = new TrackedHud(hud, listeners, armor, player);
-                listeners.add(registerListener(armor, tracked));
-                listeners.add(registerListener(hotbar, tracked));
-                listeners.add(registerListener(storage, tracked));
-                listeners.add(registerListener(backpack, tracked));
-                listeners.add(registerListener(utility, tracked));
-                listeners.add(registerListener(tools, tracked));
+                long now = System.currentTimeMillis();
+                tracked.lastArmorRefresh = now;
+                tracked.lastArrowsRefresh = now;
+                tracked.lastMainRefresh = now;
+                listeners.add(registerListener(armor, tracked, RefreshKind.ARMOR));
+                listeners.add(registerListener(hotbar, tracked, RefreshKind.MAIN_AND_ARROWS));
+                listeners.add(registerListener(storage, tracked, RefreshKind.ARROWS));
+                listeners.add(registerListener(backpack, tracked, RefreshKind.ARROWS));
+                listeners.add(registerListener(utility, tracked, RefreshKind.ARROWS));
+                listeners.add(registerListener(tools, tracked, RefreshKind.ARROWS));
                 huds.put(id, tracked);
                 System.out.println("[BetterHUD] HUD overlay shown for " + player.getDisplayName());
             } catch (Throwable t) {
@@ -100,9 +107,10 @@ final class BetterHudService {
     }
 
     private void refreshAll() {
+        long now = System.currentTimeMillis();
         for (TrackedHud tracked : huds.values()) {
             try {
-                refreshHud(tracked);
+                refreshHud(tracked, now);
             } catch (Throwable ignored) {
             }
         }
@@ -112,7 +120,11 @@ final class BetterHudService {
         if (player == null) return;
         TrackedHud tracked = huds.get(player.getPlayerRef().getUuid());
         if (tracked != null) {
-            refreshHud(tracked);
+            long now = System.currentTimeMillis();
+            tracked.lastArmorRefresh = 0L;
+            tracked.lastArrowsRefresh = 0L;
+            tracked.lastMainRefresh = 0L;
+            refreshHud(tracked, now);
         }
     }
 
@@ -141,7 +153,7 @@ final class BetterHudService {
         }
     }
 
-    private void refreshHud(TrackedHud tracked) {
+    private void refreshHud(TrackedHud tracked, long now) {
         if (tracked == null || !tracked.visible) {
             return;
         }
@@ -149,7 +161,43 @@ final class BetterHudService {
         if (player == null || player.wasRemoved()) {
             return;
         }
-        refreshHud(tracked.hud, player, tracked.armor);
+
+        if (now - tracked.lastArmorRefresh >= ARMOR_REFRESH_MS) {
+            refreshArmor(tracked);
+            tracked.lastArmorRefresh = now;
+        }
+
+        if (now - tracked.lastArrowsRefresh >= ARROWS_REFRESH_MS) {
+            refreshArrows(tracked);
+            tracked.lastArrowsRefresh = now;
+        }
+
+        if (now - tracked.lastMainRefresh >= MAIN_REFRESH_MS) {
+            refreshMainHand(tracked);
+            tracked.lastMainRefresh = now;
+        }
+    }
+
+    private void refreshArmor(TrackedHud tracked) {
+        if (tracked == null) return;
+        Player player = tracked.player;
+        if (player == null || player.wasRemoved()) return;
+        tracked.hud.refreshArmor(player, tracked.armor);
+    }
+
+    private void refreshArrows(TrackedHud tracked) {
+        if (tracked == null) return;
+        Player player = tracked.player;
+        if (player == null || player.wasRemoved()) return;
+        ItemContainer allItems = player.getInventory().getCombinedEverything();
+        tracked.hud.refreshArrows(player, allItems);
+    }
+
+    private void refreshMainHand(TrackedHud tracked) {
+        if (tracked == null) return;
+        Player player = tracked.player;
+        if (player == null || player.wasRemoved()) return;
+        tracked.hud.refreshMainHand(player);
     }
 
     private void refreshHud(BetterHudHud hud, Player player, ItemContainer armor) {
@@ -160,11 +208,40 @@ final class BetterHudService {
         hud.refresh(player, armor, allItems);
     }
 
-    private EventRegistration registerListener(ItemContainer container, TrackedHud tracked) {
+    private EventRegistration registerListener(ItemContainer container, TrackedHud tracked, RefreshKind kind) {
         if (container == null) {
             return null;
         }
-        return container.registerChangeEvent(ev -> refreshHud(tracked));
+        return container.registerChangeEvent(ev -> refreshByKind(tracked, kind));
+    }
+
+    private void refreshByKind(TrackedHud tracked, RefreshKind kind) {
+        if (tracked == null || !tracked.visible) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        switch (kind) {
+            case ARMOR -> {
+                refreshArmor(tracked);
+                tracked.lastArmorRefresh = now;
+            }
+            case ARROWS -> {
+                refreshArrows(tracked);
+                tracked.lastArrowsRefresh = now;
+            }
+            case MAIN_AND_ARROWS -> {
+                refreshMainHand(tracked);
+                refreshArrows(tracked);
+                tracked.lastMainRefresh = now;
+                tracked.lastArrowsRefresh = now;
+            }
+        }
+    }
+
+    private enum RefreshKind {
+        ARMOR,
+        ARROWS,
+        MAIN_AND_ARROWS
     }
 
     /**
@@ -211,6 +288,9 @@ final class BetterHudService {
         final ItemContainer armor;
         final Player player;
         volatile boolean visible = true;
+        volatile long lastArmorRefresh = 0L;
+        volatile long lastArrowsRefresh = 0L;
+        volatile long lastMainRefresh = 0L;
 
         TrackedHud(BetterHudHud hud, List<EventRegistration> listeners, ItemContainer armor, Player player) {
             this.hud = hud;
